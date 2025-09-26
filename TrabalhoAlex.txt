@@ -1,0 +1,221 @@
+using System;
+using System.Data;
+using System.Windows.Forms;
+using Npgsql;
+
+namespace ControleEstoque
+{
+    static class Program
+    {
+        [STAThread]
+        static void Main()
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new Form1());
+        }
+    }
+
+    public partial class Form1 : Form
+    {
+        private string connectionString = "Host=localhost;Port=5432;Username=postgres;Password=12345;Database=estoque;";
+
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            CarregarProdutos();
+        }
+
+        private void CarregarProdutos()
+        {
+            using (var conn = new NpgsqlConnection(connectionString))
+            {
+                conn.Open();
+                string sql = "SELECT * FROM produto ORDER BY id_produto";
+                var da = new NpgsqlDataAdapter(sql, conn);
+                var dt = new DataTable();
+                da.Fill(dt);
+                dgvProdutos.DataSource = dt;
+            }
+        }
+
+        private void btnCadastrar_Click(object sender, EventArgs e)
+        {
+            using (var conn = new NpgsqlConnection(connectionString))
+            {
+                conn.Open();
+                string sql = "INSERT INTO produto (nome, preco, quantidade) VALUES (@nome, @preco, @quantidade)";
+                using (var cmd = new NpgsqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("nome", txtNome.Text);
+                    cmd.Parameters.AddWithValue("preco", decimal.Parse(txtPreco.Text));
+                    cmd.Parameters.AddWithValue("quantidade", int.Parse(txtQuantidade.Text));
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            CarregarProdutos();
+        }
+
+        private void btnAdicionar_Click(object sender, EventArgs e)
+        {
+            using (var conn = new NpgsqlConnection(connectionString))
+            {
+                conn.Open();
+                string sql = "UPDATE produto SET quantidade = quantidade + @qtd WHERE id_produto = @id";
+                using (var cmd = new NpgsqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("qtd", int.Parse(txtQuantidade.Text));
+                    cmd.Parameters.AddWithValue("id", int.Parse(txtId.Text));
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            CarregarProdutos();
+        }
+
+        private void btnRemover_Click(object sender, EventArgs e)
+        {
+            using (var conn = new NpgsqlConnection(connectionString))
+            {
+                conn.Open();
+                string sql = "UPDATE produto SET quantidade = quantidade - @qtd WHERE id_produto = @id";
+                using (var cmd = new NpgsqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("qtd", int.Parse(txtQuantidade.Text));
+                    cmd.Parameters.AddWithValue("id", int.Parse(txtId.Text));
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            CarregarProdutos();
+        }
+    }
+
+    public partial class Form1
+    {
+        private Label lblId;
+        private Label lblNome;
+        private Label lblPreco;
+        private Label lblQuantidade;
+        private TextBox txtId;
+        private TextBox txtNome;
+        private TextBox txtPreco;
+        private TextBox txtQuantidade;
+        private Button btnCadastrar;
+        private Button btnAdicionar;
+        private Button btnRemover;
+        private DataGridView dgvProdutos;
+
+        private void InitializeComponent()
+        {
+            this.lblId = new Label();
+            this.lblNome = new Label();
+            this.lblPreco = new Label();
+            this.lblQuantidade = new Label();
+            this.txtId = new TextBox();
+            this.txtNome = new TextBox();
+            this.txtPreco = new TextBox();
+            this.txtQuantidade = new TextBox();
+            this.btnCadastrar = new Button();
+            this.btnAdicionar = new Button();
+            this.btnRemover = new Button();
+            this.dgvProdutos = new DataGridView();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvProdutos)).BeginInit();
+            this.SuspendLayout();
+            // 
+            // lblId
+            // 
+            this.lblId.AutoSize = true;
+            this.lblId.Location = new System.Drawing.Point(20, 20);
+            this.lblId.Text = "ID Produto:";
+            // 
+            // lblNome
+            // 
+            this.lblNome.AutoSize = true;
+            this.lblNome.Location = new System.Drawing.Point(20, 55);
+            this.lblNome.Text = "Nome:";
+            // 
+            // lblPreco
+            // 
+            this.lblPreco.AutoSize = true;
+            this.lblPreco.Location = new System.Drawing.Point(20, 90);
+            this.lblPreco.Text = "Preço:";
+            // 
+            // lblQuantidade
+            // 
+            this.lblQuantidade.AutoSize = true;
+            this.lblQuantidade.Location = new System.Drawing.Point(20, 125);
+            this.lblQuantidade.Text = "Quantidade:";
+            // 
+            // txtId
+            // 
+            this.txtId.Location = new System.Drawing.Point(100, 17);
+            this.txtId.Size = new System.Drawing.Size(180, 20);
+            // 
+            // txtNome
+            // 
+            this.txtNome.Location = new System.Drawing.Point(100, 52);
+            this.txtNome.Size = new System.Drawing.Size(180, 20);
+            // 
+            // txtPreco
+            // 
+            this.txtPreco.Location = new System.Drawing.Point(100, 87);
+            this.txtPreco.Size = new System.Drawing.Size(180, 20);
+            // 
+            // txtQuantidade
+            // 
+            this.txtQuantidade.Location = new System.Drawing.Point(100, 122);
+            this.txtQuantidade.Size = new System.Drawing.Size(180, 20);
+            // 
+            // btnCadastrar
+            // 
+            this.btnCadastrar.Location = new System.Drawing.Point(320, 15);
+            this.btnCadastrar.Size = new System.Drawing.Size(120, 30);
+            this.btnCadastrar.Text = "Cadastrar Produto";
+            this.btnCadastrar.Click += new EventHandler(this.btnCadastrar_Click);
+            // 
+            // btnAdicionar
+            // 
+            this.btnAdicionar.Location = new System.Drawing.Point(320, 55);
+            this.btnAdicionar.Size = new System.Drawing.Size(120, 30);
+            this.btnAdicionar.Text = "Adicionar Estoque";
+            this.btnAdicionar.Click += new EventHandler(this.btnAdicionar_Click);
+            // 
+            // btnRemover
+            // 
+            this.btnRemover.Location = new System.Drawing.Point(320, 95);
+            this.btnRemover.Size = new System.Drawing.Size(120, 30);
+            this.btnRemover.Text = "Remover Estoque";
+            this.btnRemover.Click += new EventHandler(this.btnRemover_Click);
+            // 
+            // dgvProdutos
+            // 
+            this.dgvProdutos.Location = new System.Drawing.Point(20, 170);
+            this.dgvProdutos.Size = new System.Drawing.Size(420, 200);
+            this.dgvProdutos.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            // 
+            // Form1
+            // 
+            this.ClientSize = new System.Drawing.Size(480, 400);
+            this.Controls.Add(this.dgvProdutos);
+            this.Controls.Add(this.btnRemover);
+            this.Controls.Add(this.btnAdicionar);
+            this.Controls.Add(this.btnCadastrar);
+            this.Controls.Add(this.txtQuantidade);
+            this.Controls.Add(this.txtPreco);
+            this.Controls.Add(this.txtNome);
+            this.Controls.Add(this.txtId);
+            this.Controls.Add(this.lblQuantidade);
+            this.Controls.Add(this.lblPreco);
+            this.Controls.Add(this.lblNome);
+            this.Controls.Add(this.lblId);
+            this.Text = "Sistema de Controle de Estoque";
+            this.Load += new EventHandler(this.Form1_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvProdutos)).EndInit();
+            this.ResumeLayout(false);
+            this.PerformLayout();
+        }
+    }
+}
